@@ -1,6 +1,6 @@
 # FLags with defaults in ENVironment variables
 
-`flenv` is a pretty simple library for parsing CLI flags with an additional feature of reading default values from envvars. When I implemented it there were no such libraries around (all available options were either type-unsafe or config file-centric). Or maybe I just search thoroughly enough.
+`flenv` is a pretty simple library for parsing CLI flags with an additional feature of reading default values from envvars. When I implemented it there were no such libraries around (all available options were either type-unsafe or config file-centric). Or maybe I just didn't search thoroughly enough.
 
 ## Installation
 
