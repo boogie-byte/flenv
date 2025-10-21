@@ -26,12 +26,13 @@ import (
 
 type flag interface {
 	isRequired() bool
+	isSet() bool
 	getName() string
 	getLongDescription() string
 	getShortDescription() string
 	setValueFromDefault()
 	setValueFromEnv() error
-	setValue(string) error
+	setValueFromString(string) error
 }
 
 type Parser struct {
@@ -191,7 +192,7 @@ func (p *Parser) registerFlag(name string, f flag) {
 
 func (p *Parser) set(name, value string) error {
 	if f := p.flagIndex[name]; f != nil {
-		return f.setValue(value)
+		return f.setValueFromString(value)
 	}
 
 	return fmt.Errorf("unknown flag: --%s", name)
@@ -248,6 +249,12 @@ func (p *Parser) parse(args []string) []error {
 			parseErrs = append(parseErrs, err)
 		}
 		args = args[1:]
+	}
+
+	for _, flag := range p.flags {
+		if flag.isRequired() && !flag.isSet() {
+			parseErrs = append(parseErrs, fmt.Errorf("missing required flag: --%s", flag.getName()))
+		}
 	}
 
 	return parseErrs

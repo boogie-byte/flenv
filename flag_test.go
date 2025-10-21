@@ -153,7 +153,7 @@ func TestFlagSetValue(t *testing.T) {
 	t.Run("ValidValue", func(t *testing.T) {
 		var v int
 		f := NewIntFlag(&v, "test-flag", "Test flag")
-		err := f.setValue("10")
+		err := f.setValueFromString("10")
 		require.NoError(t, err)
 		assert.Equal(t, 10, v)
 	})
@@ -161,7 +161,7 @@ func TestFlagSetValue(t *testing.T) {
 	t.Run("InvalidValue", func(t *testing.T) {
 		var v int
 		f := NewIntFlag(&v, "test-flag", "Test flag")
-		err := f.setValue("abc")
+		err := f.setValueFromString("abc")
 		assert.Error(t, err)
 	})
 
