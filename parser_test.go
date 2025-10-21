@@ -133,4 +133,13 @@ func TestParserParse(t *testing.T) {
 		assert.Len(t, errs, 0)
 		assert.Equal(t, 10, i)
 	})
+
+	t.Run("MissingRequiredFlag", func(t *testing.T) {
+		var i int
+		p := New()
+		p.Int(&i, "test-flag", "Test flag").Required()
+
+		errs := p.parse(nil)
+		assert.Len(t, errs, 1)
+	})
 }

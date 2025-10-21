@@ -35,6 +35,7 @@ type Flag[T any] struct {
 	defaultValueSet bool
 
 	required bool
+	set      bool
 
 	parseFunc func(string) (T, error)
 }
@@ -84,6 +85,10 @@ func (f *Flag[T]) isRequired() bool {
 	return f.required
 }
 
+func (f *Flag[T]) isSet() bool {
+	return f.set
+}
+
 func (f *Flag[T]) getName() string {
 	return f.name
 }
@@ -114,13 +119,19 @@ func (f *Flag[T]) getLongDescription() string {
 	return b.String()
 }
 
-func (f *Flag[T]) setValue(s string) error {
+func (f *Flag[T]) setValue(val T) {
+	*f.target = val
+	f.set = true
+}
+
+func (f *Flag[T]) setValueFromString(s string) error {
 	val, err := f.parseFunc(s)
 	if err != nil {
 		return err
 	}
 
-	*f.target = val
+	f.setValue(val)
+
 	return nil
 }
 
@@ -130,12 +141,12 @@ func (f *Flag[T]) setValueFromEnv() error {
 		return nil
 	}
 
-	return f.setValue(val)
+	return f.setValueFromString(val)
 }
 
 func (f *Flag[T]) setValueFromDefault() {
 	if f.defaultValueSet {
-		*f.target = f.defaultValue
+		f.setValue(f.defaultValue)
 	}
 }
 
