@@ -16,9 +16,11 @@ package flenv
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParserPrintHelp(t *testing.T) {
@@ -48,6 +50,26 @@ func TestParserPrintHelp(t *testing.T) {
 		"  --version                  Show application version\n"
 
 	assert.Equal(t, helpMessage, buf.String())
+}
+
+func TestParserPrintError(t *testing.T) {
+	p := New()
+
+	buf := bytes.NewBuffer(nil)
+	p.printErrs(buf, []error{errors.New("test-error")})
+
+	assert.Equal(t, "test-error\n\nUse '--help' flag for more info.\n", buf.String())
+}
+
+func TestParserPrintVersion(t *testing.T) {
+	p := New(
+		WithAppVersion("1.2.3"),
+	)
+
+	buf := bytes.NewBuffer(nil)
+	p.printVersion(buf)
+
+	assert.Equal(t, "1.2.3\n", buf.String())
 }
 
 func TestParserRegisterExistingFlag(t *testing.T) {
@@ -110,7 +132,7 @@ func TestParserParse(t *testing.T) {
 		p.Bool(&b, "test-flag", "Test flag")
 
 		errs := p.parse([]string{"--test-flag"})
-		assert.Len(t, errs, 0)
+		assert.Empty(t, errs)
 		assert.True(t, b)
 	})
 
@@ -120,7 +142,7 @@ func TestParserParse(t *testing.T) {
 		p.Int(&i, "test-flag", "Test flag")
 
 		errs := p.parse([]string{"--test-flag=10"})
-		assert.Len(t, errs, 0)
+		assert.Empty(t, errs)
 		assert.Equal(t, 10, i)
 	})
 
@@ -130,16 +152,45 @@ func TestParserParse(t *testing.T) {
 		p.Int(&i, "test-flag", "Test flag")
 
 		errs := p.parse([]string{"--test-flag", "10"})
-		assert.Len(t, errs, 0)
+		assert.Empty(t, errs)
 		assert.Equal(t, 10, i)
 	})
+}
 
-	t.Run("MissingRequiredFlag", func(t *testing.T) {
+func TestParserCheckRequiredFlags(t *testing.T) {
+	t.Run("NoRequiredFlags", func(t *testing.T) {
+		var i int
+		p := New()
+		p.Int(&i, "test-flag", "Test flag")
+
+		parseErrs := p.parse(nil)
+		require.Empty(t, parseErrs)
+
+		checkErrs := p.checkRequiredFlags()
+		assert.Empty(t, checkErrs)
+	})
+
+	t.Run("RequiredFlagNotSet", func(t *testing.T) {
 		var i int
 		p := New()
 		p.Int(&i, "test-flag", "Test flag").Required()
 
-		errs := p.parse(nil)
-		assert.Len(t, errs, 1)
+		parseErrs := p.parse(nil)
+		require.Empty(t, parseErrs)
+
+		checkErrs := p.checkRequiredFlags()
+		assert.Len(t, checkErrs, 1)
+	})
+
+	t.Run("RequiredFlagSet", func(t *testing.T) {
+		var i int
+		p := New()
+		p.Int(&i, "test-flag", "Test flag").Required()
+
+		parseErrs := p.parse([]string{"--test-flag=10"})
+		require.Empty(t, parseErrs)
+
+		checkErrs := p.checkRequiredFlags()
+		assert.Empty(t, checkErrs)
 	})
 }

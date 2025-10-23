@@ -128,13 +128,8 @@ func (p *Parser) String(target *string, name, description string) *Flag[string] 
 }
 
 func (p *Parser) Parse() {
-	parseErrs := p.parse(os.Args[1:])
-
-	if len(parseErrs) != 0 {
-		for _, err := range parseErrs {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		p.printHelp(os.Stderr)
+	if errs := p.parse(os.Args[1:]); len(errs) != 0 {
+		p.printErrs(os.Stderr, errs)
 		os.Exit(1)
 	}
 
@@ -144,8 +139,13 @@ func (p *Parser) Parse() {
 	}
 
 	if p.versionCalled {
-		fmt.Println(p.appVersion)
+		p.printVersion(os.Stdout)
 		os.Exit(0)
+	}
+
+	if errs := p.checkRequiredFlags(); len(errs) != 0 {
+		p.printErrs(os.Stderr, errs)
+		os.Exit(1)
 	}
 }
 
@@ -179,6 +179,17 @@ func (p *Parser) printHelp(w io.Writer) {
 		fmt.Fprintln(tw, flag.getLongDescription())
 	}
 	tw.Flush()
+}
+
+func (p *Parser) printVersion(w io.Writer) {
+	fmt.Fprintln(w, p.appVersion)
+}
+
+func (p *Parser) printErrs(w io.Writer, errs []error) {
+	for _, err := range errs {
+		fmt.Fprintln(w, err)
+	}
+	fmt.Fprintf(w, "\nUse '--%s' flag for more info.\n", p.helpFlagName)
 }
 
 func (p *Parser) registerFlag(name string, f flag) {
@@ -251,11 +262,17 @@ func (p *Parser) parse(args []string) []error {
 		args = args[1:]
 	}
 
+	return parseErrs
+}
+
+func (p *Parser) checkRequiredFlags() []error {
+	var checkErrs []error
+
 	for _, flag := range p.flags {
 		if flag.isRequired() && !flag.isSet() {
-			parseErrs = append(parseErrs, fmt.Errorf("missing required flag: --%s", flag.getName()))
+			checkErrs = append(checkErrs, fmt.Errorf("missing required flag: --%s", flag.getName()))
 		}
 	}
 
-	return parseErrs
+	return checkErrs
 }
