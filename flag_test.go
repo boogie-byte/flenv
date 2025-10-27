@@ -15,6 +15,7 @@
 package flenv
 
 import (
+	"net/url"
 	"testing"
 	"time"
 
@@ -53,6 +54,38 @@ func TestNewFlag(t *testing.T) {
 		assert.Equal(t, "test-string-flag", f.getName())
 		assert.Equal(t, "--test-string-flag=STRING", f.getShortDescription())
 		assert.Equal(t, false, f.isBool)
+	})
+
+	t.Run("float", func(t *testing.T) {
+		var v float64
+		f := NewFloatFlag(&v, 64, "test-float-flag", "Test float flag")
+		assert.Equal(t, "test-float-flag", f.getName())
+		assert.Equal(t, "--test-float-flag=FLOAT", f.getShortDescription())
+		assert.Equal(t, false, f.isBool)
+	})
+
+	t.Run("url", func(t *testing.T) {
+		var v *url.URL
+		f := NewURLFlag(&v, "test-url-flag", "Test url flag")
+		assert.Equal(t, "test-url-flag", f.getName())
+		assert.Equal(t, "--test-url-flag=URL", f.getShortDescription())
+		assert.Equal(t, false, f.isBool)
+	})
+}
+
+func TestNewURLFlag(t *testing.T) {
+	t.Run("empty string", func(t *testing.T) {
+		var v *url.URL
+		f := NewURLFlag(&v, "test-url-flag", "Test url flag")
+		err := f.setValueFromString("")
+		assert.Error(t, err)
+	})
+
+	t.Run("valid URL", func(t *testing.T) {
+		var v *url.URL
+		f := NewURLFlag(&v, "test-url-flag", "Test url flag")
+		err := f.setValueFromString("http://example.com")
+		assert.NoError(t, err)
 	})
 }
 

@@ -35,8 +35,10 @@ p.Parse()
 ## Supported variable types
 * `bool`
 * `int`
+* `float64`
 * `string`
 * `time.Duration`
+* `*url.URL`
 
 Adding support for any other type is pretty straightforward, I'll support more types as needed.
 

@@ -15,11 +15,17 @@
 package flenv
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+)
+
+var (
+	errEmptyString = errors.New("empty string")
 )
 
 type Flag[T any] struct {
@@ -188,6 +194,34 @@ func NewStringFlag(target *string, name, helpMessage string) *Flag[string] {
 		placeholder: "STRING",
 		parseFunc: func(s string) (string, error) {
 			return s, nil
+		},
+	}
+}
+
+func NewFloatFlag(target *float64, bitSize int, name, helpMessage string) *Flag[float64] {
+	return &Flag[float64]{
+		target:      target,
+		name:        name,
+		helpMessage: helpMessage,
+		placeholder: "FLOAT",
+		parseFunc: func(s string) (float64, error) {
+			return strconv.ParseFloat(s, bitSize)
+		},
+	}
+}
+
+func NewURLFlag(target **url.URL, name, helpMessage string) *Flag[*url.URL] {
+	return &Flag[*url.URL]{
+		target:      target,
+		name:        name,
+		helpMessage: helpMessage,
+		placeholder: "URL",
+		parseFunc: func(s string) (*url.URL, error) {
+			if s == "" {
+				return nil, errEmptyString
+			}
+
+			return url.Parse(s)
 		},
 	}
 }

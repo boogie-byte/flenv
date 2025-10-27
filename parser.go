@@ -17,6 +17,7 @@ package flenv
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"slices"
 	"strings"
@@ -117,6 +118,30 @@ func (p *Parser) Int(target *int, name, description string) *Flag[int] {
 
 func (p *Parser) String(target *string, name, description string) *Flag[string] {
 	f := NewStringFlag(target, name, description)
+	p.registerFlag(name, f)
+
+	if p.autoEnv {
+		envVarName := p.envVarPrefix + p.envVarFormatter(name)
+		f = f.Env(envVarName)
+	}
+
+	return f
+}
+
+func (p *Parser) Float(target *float64, bitSize int, name, description string) *Flag[float64] {
+	f := NewFloatFlag(target, bitSize, name, description)
+	p.registerFlag(name, f)
+
+	if p.autoEnv {
+		envVarName := p.envVarPrefix + p.envVarFormatter(name)
+		f = f.Env(envVarName)
+	}
+
+	return f
+}
+
+func (p *Parser) URL(target **url.URL, name, description string) *Flag[*url.URL] {
+	f := NewURLFlag(target, name, description)
 	p.registerFlag(name, f)
 
 	if p.autoEnv {
